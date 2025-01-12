@@ -1,0 +1,88 @@
+/* login.css */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: lightsteelblue;
+  }
+  
+  .login-container {
+    max-width: 30vw;
+    height: 50vh;
+    margin: 2vw auto;
+    padding: 1vw;
+    background: cadetblue;
+    border-radius: 2vh;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .password-header {
+    text-align: center;
+    color: white;
+    font-style: bold;
+    font-size: 4vh;
+  }
+  
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 2vh;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    color: white;
+  }
+
+  .username {
+    color:white;
+  }
+  
+  label {
+    margin-bottom: 2vh;
+    font-weight: bold;
+    color: #555;
+  }
+  
+  input[type="text"],
+  input[type="password"] {
+    padding: 1vh;
+    border: 0.1vw solid #ccc;
+    border-radius: 1vw;
+  }
+  
+  input[type="text"]:focus,
+  input[type="password"]:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+  
+  .login-button {
+    padding: 2vh;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 1vh;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .login-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .login-button:active {
+    background-color: #004080;
+  }
+  
+  .login-container a {
+    text-align: center;
+    display: block;
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  .login-container a:hover {
+    text-decoration: underline;
+  }
