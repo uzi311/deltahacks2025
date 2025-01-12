@@ -1,12 +1,14 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
 import dropbox
-import time
+import asyncio
 from dropbox.exceptions import ApiError
 import zipfile
 import io
 import os
 import cohere
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
 load_dotenv()
 ACCESS_TOKEN = os.getenv('COHERE_API')
@@ -17,7 +19,6 @@ FOLDER_PATH = '/Apps/Mind Monitor'
 dbx = dropbox.Dropbox(DROPBOX_TOKEN)
 co = cohere.ClientV2(api_key=ACCESS_TOKEN)
 
-app = FastAPI()
 
 # A place to store the last analysis result (this can be extended to store more if needed)
 latest_analysis_result = None
@@ -29,7 +30,7 @@ def analyze_file_with_cohere(csv_data):
         messages=[
             {
                 "role": "user",
-                "content": f"Analyzing the EEG waves displayed in the following CSV file recorded over a period of time, can you rank the top 3 most likely emotions the person wearing the Muse headband was feeling in descending order of accuracy? The emotions we are using are: anger, sadness, anxiety, joy, embarrassment, relaxation. {csv_data}",
+                "content": f"Analyzing the EEG waves displayed in the following CSV file recorded over a period of time, can you rank the top 3 most likely emotions the person wearing the Muse headband was feeling in the dataset in descending order of accuracy? The emotions we are using are: anger, sadness, anxiety, joy, embarrassment, calmness. {csv_data} Ignore all empty results, and have a good mix between accuracy and speed. Return the output in the format 1. 2. 3.",
             }
         ],
     )
@@ -37,6 +38,8 @@ def analyze_file_with_cohere(csv_data):
 
 def get_correct_output(csv_data):
     response = analyze_file_with_cohere(csv_data)
+    while response[0] != "1":
+        response = analyze_file_with_cohere(csv_data)
     return response
 
 def list_files_in_folder():
@@ -97,7 +100,28 @@ async def monitor_dropbox_folder():
                 previous_file_count = current_file_count
 
         # Wait before checking again
-        time.sleep(10)
+        await asyncio.sleep(5)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    import asyncio
+    asyncio.create_task(monitor_dropbox_folder())  # Start monitoring Dropbox folder in the background
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/latest-analysis")
 async def get_latest_analysis():
@@ -107,7 +131,6 @@ async def get_latest_analysis():
     else:
         return {"message": "No new analysis results available."}
 
-@app.on_event("startup")
-async def start_monitoring():
-    import asyncio
-    asyncio.create_task(monitor_dropbox_folder())  # Start monitoring Dropbox folder in the background
+
+
+

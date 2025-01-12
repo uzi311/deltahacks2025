@@ -7,8 +7,6 @@ const MedicalReport = () => {
   const [pages, setPages] = useState([]);
   const [analysisResult, setAnalysisResult] = useState(null);
 
-  const socket = new WebSocket("ws://localhost:8000/ws");
-
   useEffect(() => {
     // Set up polling every 10 seconds
     const intervalId = setInterval(async () => {
@@ -23,7 +21,7 @@ const MedicalReport = () => {
       } catch (error) {
         console.error('Error fetching analysis result:', error);
       }
-    }, 5000); // 10 seconds
+    }, 5000); // 5 seconds
 
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
@@ -60,7 +58,6 @@ const MedicalReport = () => {
           <p>Report ID: ____________</p>
           <p>Doctor: _________________</p>
           <p>License #: ______________</p>
-          <p>{socketText}</p>
           <p>{analysisResult ? analysisResult : 'Waiting for analysis...'}</p>
         </div>
 
