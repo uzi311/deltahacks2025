@@ -30,7 +30,25 @@ def analyze_file_with_cohere(csv_data):
         messages=[
             {
                 "role": "user",
-                "content": f"Analyzing the EEG waves displayed in the following CSV file recorded over a period of time, can you rank the top 3 most likely emotions the person wearing the Muse headband was feeling in the dataset in descending order of accuracy? The emotions we are using are: anger, sadness, anxiety, joy, embarrassment, calmness. {csv_data} Ignore all empty results, and have a good mix between accuracy and speed. Return the output in the format 1. 2. 3.",
+                "content": f"""
+Analyzing the EEG waves displayed in the following CSV file recorded over a period of time, 
+can you list the probability of each emotion the person wearing the Muse headband was feeling in the dataset? 
+The emotions we are using are: anger, sadness, anxiety, joy, embarrassment, calmness. 
+Return the list of probabilities in the given order of emotions, ensuring the probabilities follow a realistic normal distribution 
+(i.e., the probabilities should sum to 1, representing 100%). 
+
+Ensure the distribution reflects realistic emotional states based on EEG data
+The output should look like [x, x, x, x, x, x], where each x is a number representing the probability of its respective emotion 
+as a percentage, with all x values summing up to 100%. 
+
+After that, separated by a special character #, can you give a 2 paragraph detailed and accurate summary of the emotions 
+the patient was feeling, highlighting dominant emotions and fluctuations in emotional states? 
+
+{csv_data}
+
+Ignore all empty results, have good accuracy but making sure a response is given in a timely manner.
+"""
+
             }
         ],
     )
@@ -38,7 +56,7 @@ def analyze_file_with_cohere(csv_data):
 
 def get_correct_output(csv_data):
     response = analyze_file_with_cohere(csv_data)
-    while response[0] != "1":
+    while response[0] != "[":
         response = analyze_file_with_cohere(csv_data)
     return response
 

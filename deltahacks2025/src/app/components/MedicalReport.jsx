@@ -12,6 +12,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 export default function LandingPage() {
   const [message, setMessage] = useState("Enter Question for Patient");
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [tempData, setTempData] = useState([0, 0, 0, 0, 0, 0])
   const shownResponse = analysisResult ? analysisResult : 'Waiting for analysis...'
 
   const handleMessageChange = (e) => {
@@ -26,7 +27,7 @@ export default function LandingPage() {
     labels: ["Anger", "Sadness", "Anxiety", "Joy", "Embarrassment", "Calmness"],
     datasets: [
       {
-        data: [60, 30, 10, 0, 0, 0], // Simulated data, can be dynamic
+        data: tempData, // Simulated data, can be dynamic
         backgroundColor: ["#FF0000", "#C70039", "#2196F3", "#FFFF00", "#FFC0CB", "#3CB371"], // Colors for each section
       },
     ],
@@ -38,7 +39,13 @@ export default function LandingPage() {
         const response = await fetch('http://localhost:8000/latest-analysis');
         const data = await response.json();
         if (data.analysis_result) {
-          setAnalysisResult(data.analysis_result);
+          console.log("data result is " + data.analysis_result);
+          const [probabilitiesPart, summaryPart] = data.analysis_result.split("\n\n#");
+          const probabilities = JSON.parse(probabilitiesPart.trim());
+          const detailedSummary = summaryPart.trim();
+          setAnalysisResult(detailedSummary);
+          setTempData(Object.values(probabilities));
+          console.log("probabilities are " + probabilities);
         } else {
           console.log(data.message);
         }
@@ -67,10 +74,10 @@ export default function LandingPage() {
               <TextField
               id="outlined-read-only-input"
               label="Read Only"
-              defaultValue={shownResponse}
+              value={shownResponse}
               sx={{width: "100%", height:"100%"}}
               multiline
-              rows={16}
+              rows={14}
               slotProps={{
                 input: {
                   readOnly: true,
