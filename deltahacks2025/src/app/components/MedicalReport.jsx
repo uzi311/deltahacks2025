@@ -8,7 +8,7 @@ const MedicalReport = () => {
   const [socketText, setSocketText] = useState("hello");
   const [socketConnected, setSocketConnected] = useState(false);
 
-  const socket = new WebSocket("ws://172.18.180.253:8000/ws");
+  const socket = new WebSocket("ws://localhost:8000/ws");
 
   // Handle the WebSocket connection status
   useEffect(() => {
