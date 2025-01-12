@@ -1,0 +1,41 @@
+.container {
+    display: flex;
+    background-color: #f4f4f9;
+    gap: 200px;
+    align-items: center; /* Center vertically */
+    height: calc(100vh - 110px); /* Subtract a small offset */ /* Take up full viewport height */
+}
+
+.left-section {
+    margin-left: 150px;
+}
+  
+.right-section {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    margin-right: 80px;
+    height: calc(100vh - 250px);
+    width: calc(100vw);
+}
+
+.bubble-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.text-bubble {
+    border-radius: 10px;
+}
+
+.response-bubble {
+
+}
+  
+  
+  

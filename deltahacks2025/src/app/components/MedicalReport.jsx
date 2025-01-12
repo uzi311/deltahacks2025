@@ -1,14 +1,38 @@
 "use client"
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import { Doughnut } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import TextField from '@mui/material/TextField';
+import './MedicalReport.css';
+import Button from '@mui/material/Button';
 
-const MedicalReport = () => {
-  // Declare state variables to store the user's input and WebSocket status
-  const [userInput, setUserInput] = useState('');
-  const [pages, setPages] = useState([]);
+// Register chart elements
+ChartJS.register(ArcElement, Tooltip, Legend);
+
+export default function LandingPage() {
+  const [message, setMessage] = useState("Enter Question for Patient");
   const [analysisResult, setAnalysisResult] = useState(null);
+  const shownResponse = analysisResult ? analysisResult : 'Waiting for analysis...'
+
+  const handleMessageChange = (e) => {
+    if (e.target.value == '') {
+      setMessage("Enter Question for Patient");
+    } else {
+      setMessage(e.target.value);
+    }
+  };
+
+  const data = {
+    labels: ["Anger", "Sadness", "Anxiety", "Joy", "Embarrassment", "Calmness"],
+    datasets: [
+      {
+        data: [60, 30, 10, 0, 0, 0], // Simulated data, can be dynamic
+        backgroundColor: ["#FF0000", "#C70039", "#2196F3", "#FFFF00", "#FFC0CB", "#3CB371"], // Colors for each section
+      },
+    ],
+  };
 
   useEffect(() => {
-    // Set up polling every 10 seconds
     const intervalId = setInterval(async () => {
       try {
         const response = await fetch('http://localhost:8000/latest-analysis');
@@ -21,145 +45,42 @@ const MedicalReport = () => {
       } catch (error) {
         console.error('Error fetching analysis result:', error);
       }
-    }, 5000); // 5 seconds
+    }, 5000);
 
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
   }, []);
 
-  // Handle the change in the input field
-  const handleChange = (e) => {
-    setUserInput(e.target.value); // Update the state with the new input value
-  };
-
-  // Handle the form submission or button click
-  const handleSubmit = () => {
-    if (userInput.trim() !== "") {
-      setPages([...pages, userInput]);
-      setUserInput('');
-      
-      if (socketConnected) {
-        // Send the user input to the server if the socket is connected
-        socket.send(userInput);
-      } else {
-        console.log('WebSocket is not connected. Cannot send message.');
-      }
-    }
-  };
-
   return (
-    <div className="report-container">
-      {/* Report Card */}
-      <div className="report-card">
-        {/* Header Section */}
-        <div className="section header">
-          <h1 className="report-title">Medical Report</h1>
-          <p>Date: _________________</p>
-          <p>Report ID: ____________</p>
-          <p>Doctor: _________________</p>
-          <p>License #: ______________</p>
-          <p>{analysisResult ? analysisResult : 'Waiting for analysis...'}</p>
+    <div className="container">
+        <div className="left-section">
+          <Doughnut data={data} width={400} height={400} />
         </div>
 
-        {/* Therapist's Question */}
-        <div className="section">
-          <div className="main-header">
-            <h1>Response 1</h1>
-          </div>
-          <h2 className="section-title">Therapist's Question</h2>
-          <textarea
-            value={userInput}          // The value of the textarea is tied to userInput state
-            onChange={handleChange}    // Handle input changes and update state
-            className="text-box"
-            placeholder="Type the therapist's question here..."
-          ></textarea>
-        </div>
-        <button onClick={handleSubmit}>Submit</button>
-
-        {/* Analysis and Solutions */}
-        <div className="section">
-          <h2 className="section-title">Analysis & Solutions</h2>
-          <textarea
-            className="text-box"
-            placeholder="Analysis and suggested solutions will appear here..."
-          ></textarea>
-        </div>
-
-        {/* Brain Scan Images */}
-        <div className="section">
-          <h2 className="section-title">Brain Scan Images</h2>
-          <div className="brain-scan-placeholder">
-            <p>Placeholder for brain scan images</p>
-          </div>
-        </div>
-
-        {/* Emotion Circles */}
-        <div className="section">
-          <h2 className="section-title">Patient's Emotions</h2>
-          <div className="emotion-circles">
-            <div className="emotion-circle red"></div>
-            <div className="emotion-circle orange"></div>
-            <div className="emotion-circle yellow"></div>
-            <div className="emotion-circle green"></div>
-            <div className="emotion-circle blue"></div>
-          </div>
-        </div>
-      </div>
-
-      {pages.length > 0 && (
-        <div>
-          {pages.map((page, index) => (
-            <div className="report-card" key={index + 2}>
-              {/* Header Section */}
-              <div className="main-header">
-                <h1>Response {index + 2}</h1>
-              </div>
-              {/* Therapist's Question */}
-              <div className="section">
-                <h2 className="section-title">Therapist's Question</h2>
-                <textarea
-                  value={userInput}
-                  onChange={handleChange}
-                  className="text-box"
-                  placeholder="Type the therapist's question here..."
-                ></textarea>
-              </div>
-              <button onClick={handleSubmit}>Submit</button>
-
-              {/* Analysis and Solutions */}
-              <div className="section">
-                <h2 className="section-title">Analysis & Solutions</h2>
-                <textarea
-                  className="text-box"
-                  placeholder="Analysis and suggested solutions will appear here..."
-                ></textarea>
-              </div>
-
-              {/* Brain Scan Images */}
-              <div className="section">
-                <h2 className="section-title">Brain Scan Images</h2>
-                <div className="brain-scan-placeholder">
-                  <p>Placeholder for brain scan images</p>
-                </div>
-              </div>
-
-              {/* Emotion Circles */}
-              <div className="section">
-                <h2 className="section-title">Patient's Emotions</h2>
-                <div className="emotion-circles">
-                  <div className="emotion-circle red"></div>
-                  <div className="emotion-circle orange"></div>
-                  <div className="emotion-circle yellow"></div>
-                  <div className="emotion-circle green"></div>
-                  <div className="emotion-circle blue"></div>
-                </div>
-              </div>
+        <div className="right-section">
+          <div className="bubble-container">
+            <div className="text-bubble">
+              <TextField id="outlined-basic" label={message} variant="outlined" sx={{width: "100%"}} onChange={handleMessageChange}/>
             </div>
-          ))}
+
+            <div className="response-bubble">
+              <TextField
+              id="outlined-read-only-input"
+              label="Read Only"
+              defaultValue={shownResponse}
+              sx={{width: "100%", height:"100%"}}
+              multiline
+              rows={16}
+              slotProps={{
+                input: {
+                  readOnly: true,
+                },
+              }}
+              />
+            </div>
+            <Button variant="contained" className='submit-button' sx={{backgroundColor: "#008080", height: "40px"}}>Submit</Button>
+          </div>
         </div>
-      )}
     </div>
   );
-};
-
-export default MedicalReport;
+}
