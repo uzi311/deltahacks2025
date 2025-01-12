@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI
 from dotenv import load_dotenv
 import dropbox
 import time
@@ -6,7 +6,7 @@ from dropbox.exceptions import ApiError
 import zipfile
 import io
 import os
-import cohere 
+import cohere
 
 load_dotenv()
 ACCESS_TOKEN = os.getenv('COHERE_API')
@@ -19,16 +19,8 @@ co = cohere.ClientV2(api_key=ACCESS_TOKEN)
 
 app = FastAPI()
 
-# Keep track of connected WebSocket clients
-connected_clients = []
-
-async def send_to_all_clients(message: str):
-    """Send a message to all connected WebSocket clients."""
-    for client in connected_clients:
-        try:
-            await client.send_text(message)
-        except WebSocketDisconnect:
-            connected_clients.remove(client)
+# A place to store the last analysis result (this can be extended to store more if needed)
+latest_analysis_result = None
 
 def analyze_file_with_cohere(csv_data):
     """Send CSV data to Cohere for analysis."""
@@ -82,7 +74,8 @@ def unzip_file(zip_data):
             return csv_file.read().decode('utf-8')
 
 async def monitor_dropbox_folder():
-    """Monitor Dropbox for new files and notify clients."""
+    """Monitor Dropbox for new files and update analysis result."""
+    global latest_analysis_result
     previous_file_count = 0
 
     while True:
@@ -97,28 +90,24 @@ async def monitor_dropbox_folder():
                 zip_data = download_file(latest_file.path_display)
                 if zip_data:
                     csv_data = unzip_file(zip_data)
-                    analysis_result = get_correct_output(csv_data)
+                    latest_analysis_result = get_correct_output(csv_data)  # Store the result
 
-                    print(analysis_result)
-                    await send_to_all_clients(analysis_result)
+                    print(f"Analysis result: {latest_analysis_result}")
 
                 previous_file_count = current_file_count
 
         # Wait before checking again
         time.sleep(10)
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-    connected_clients.append(websocket)
-    try:
-        while True:
-            # Keep the WebSocket connection open
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        connected_clients.remove(websocket)
+@app.get("/latest-analysis")
+async def get_latest_analysis():
+    """Endpoint for frontend to pull the latest analysis result."""
+    if latest_analysis_result:
+        return {"analysis_result": latest_analysis_result}
+    else:
+        return {"message": "No new analysis results available."}
 
 @app.on_event("startup")
 async def start_monitoring():
     import asyncio
-    asyncio.create_task(monitor_dropbox_folder())
+    asyncio.create_task(monitor_dropbox_folder())  # Start monitoring Dropbox folder in the background

@@ -5,36 +5,28 @@ const MedicalReport = () => {
   // Declare state variables to store the user's input and WebSocket status
   const [userInput, setUserInput] = useState('');
   const [pages, setPages] = useState([]);
-  const [socketText, setSocketText] = useState("hello");
-  const [socketConnected, setSocketConnected] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
 
   const socket = new WebSocket("ws://localhost:8000/ws");
 
-  // Handle the WebSocket connection status
   useEffect(() => {
-    socket.onopen = () => {
-      console.log('WebSocket connected');
-      setSocketConnected(true); // Set the connection status to true
-    };
+    // Set up polling every 10 seconds
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await fetch('http://localhost:8000/latest-analysis');
+        const data = await response.json();
+        if (data.analysis_result) {
+          setAnalysisResult(data.analysis_result);
+        } else {
+          console.log(data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching analysis result:', error);
+      }
+    }, 5000); // 10 seconds
 
-    socket.onclose = () => {
-      console.log('WebSocket disconnected');
-      setSocketConnected(false); // Set the connection status to false
-    };
-
-    socket.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setSocketConnected(false); // Set the connection status to false in case of an error
-    };
-
-    socket.onmessage = (event) => {
-      setSocketText(event.data); // Update the socketText state with the message received from the server
-    };
-
-    // Cleanup WebSocket on component unmount
-    return () => {
-      socket.close();
-    };
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   // Handle the change in the input field
@@ -69,7 +61,7 @@ const MedicalReport = () => {
           <p>Doctor: _________________</p>
           <p>License #: ______________</p>
           <p>{socketText}</p>
-          <p>{socketConnected ? "WebSocket is connected" : "WebSocket is disconnected"}</p>
+          <p>{analysisResult ? analysisResult : 'Waiting for analysis...'}</p>
         </div>
 
         {/* Therapist's Question */}
